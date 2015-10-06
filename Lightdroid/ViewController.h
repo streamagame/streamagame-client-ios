@@ -8,7 +8,21 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+#import "libavformat/avformat.h"
+#import "libavcodec/avcodec.h"
+#import "libavformat/avio.h"
+#import "libswscale/swscale.h"
+
+#import "CocoaAsyncSocket/AsyncUdpSocket.h"
+
+@interface ViewController : UIViewController<AsyncUdpSocketDelegate> {
+    AVFormatContext *pFormatCtx;
+    AVCodecContext *pCodecCtx;
+
+}
+
+- (void)startPlayback;
+- (void)stopPlayback;
 
 
 @end
