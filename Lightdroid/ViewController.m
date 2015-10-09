@@ -159,6 +159,8 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
     
     // Get a pointer to the codec context for the video stream
     pCodecCtx = pFormatCtx->streams[videoStream]->codec;
+    pCodecCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
+    pCodecCtx->flags2 |= AV_CODEC_FLAG2_FAST;
     
     // Find the decoder for the video stream
     pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
