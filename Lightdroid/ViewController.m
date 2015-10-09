@@ -119,8 +119,6 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
         av_log(NULL, AV_LOG_ERROR, "Couldn't create format context\n");
         return;
     }
-    // pFormatCtx->flags = /*AVFMT_FLAG_NOFILLIN |*/ /*) AVFMT_FLAG_NOPARSE | AVFMT_FLAG_DISCARD_CORRUPT |*/ AVFMT_FLAG_IGNIDX | AVFMT_FLAG_IGNDTS | AVFMT_FLAG_GENPTS | AVFMT_FLAG_NOBUFFER |AVFMT_FLAG_FLUSH_PACKETS;
-    // pFormatCtx->error_recognition = 0;
     pFormatCtx->flags = AVFMT_FLAG_NOBUFFER;
     
     // Demo stream: rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov
@@ -163,7 +161,11 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
     pCodecCtx->flags2 |= AV_CODEC_FLAG2_FAST;
     
     // Find the decoder for the video stream
-    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    
+    pCodec = avcodec_find_decoder_by_name("h264_videotoolbox");
+    if (!pCodec)
+        pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    
     if (pCodec == NULL) {
         av_log(NULL, AV_LOG_ERROR, "Unsupported codec!\n");
         return;
@@ -204,15 +206,6 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
                 // Allocate RGB picture
                 avpicture_alloc(&picture, PIX_FMT_RGB24, screenDimensions.width, screenDimensions.height);
                 
-                // Setup scaler
-                /*static int sws_flags =  SWS_FAST_BILINEAR;
-                img_convert_ctx = sws_getContext(pCodecCtx->width,
-                                                 pCodecCtx->height,
-                                                 pCodecCtx->pix_fmt,
-                                                 screenDimensions.width,
-                                                 screenDimensions.height,
-                                                 PIX_FMT_RGB24,
-                                                 sws_flags, NULL, NULL, NULL);*/
                 CGSize videoSize = CGSizeMake(pCodecCtx->width, pCodecCtx->height);
                 dispatch_sync(dispatch_get_main_queue(), ^{
                     self.videoGLView = [[VideoGLView alloc] initWithFrame:self.view.frame andVideoSize:videoSize];
@@ -229,46 +222,12 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
             [self.renderer submitDecodeBuffer:duplicated_data length:packet.size];*/
             
             if (frame_finished && pFrame && pFrame->data[0] && self.videoGLView) {
-                /*sws_scale(img_convert_ctx,
-                          pFrame->data,
-                          pFrame->linesize,
-                          0,
-                          pCodecCtx->height,
-                          picture.data,
-                          picture.linesize);
-                
-                CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
-                CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, picture.data[0], picture.linesize[0]*screenDimensions.height,kCFAllocatorNull);
-                CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
-                CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-                CGImageRef cgImage = CGImageCreate(screenDimensions.width,
-                                                   screenDimensions.height,
-                                                   8,
-                                                   24,
-                                                   picture.linesize[0],
-                                                   colorSpace,
-                                                   bitmapInfo,
-                                                   provider, 
-                                                   NULL, 
-                                                   NO, 
-                                                   kCGRenderingIntentDefault);
-                CGColorSpaceRelease(colorSpace);
-                
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    self.imageView.image = [UIImage imageWithCGImage:cgImage];
-                });
-                
-                CGImageRelease(cgImage);
-                CGDataProviderRelease(provider);
-                CFRelease(data);*/
                 
                 dispatch_sync(dispatch_get_main_queue(), ^{
                     [self.videoGLView displayFrame:pFrame];
                 });
             }
-        } /*else if (packet.stream_index != audioStream) {
-            // NSLog(@"Received packet in stream %d", packet.stream_index);
-        }*/
+        }
         
         av_free_packet(&packet);
     }
