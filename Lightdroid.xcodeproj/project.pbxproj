@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9307050A1BC539A100F452EA /* VideoGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 930705091BC539A100F452EA /* VideoGLView.m */; settings = {ASSET_TAGS = (); }; };
 		9345D29D1BB56F310027EF97 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9345D29C1BB56F310027EF97 /* main.m */; };
 		9345D2A01BB56F310027EF97 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9345D29F1BB56F310027EF97 /* AppDelegate.m */; };
 		9345D2A31BB56F310027EF97 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9345D2A21BB56F310027EF97 /* ViewController.m */; };
@@ -25,6 +26,8 @@
 		9345D3AE1BB579970027EF97 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9345D3AD1BB579970027EF97 /* libiconv.tbd */; };
 		9345D3B21BB974040027EF97 /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9345D3B11BB974040027EF97 /* VideoDecoderRenderer.m */; settings = {ASSET_TAGS = (); }; };
 		9345D3B41BB975F20027EF97 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9345D3B31BB975F20027EF97 /* CoreFoundation.framework */; };
+		93E7EA071BC696430074C872 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E7EA061BC696430074C872 /* QuartzCore.framework */; };
+		93E7EA091BC696500074C872 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E7EA081BC696500074C872 /* OpenGLES.framework */; };
 		93F111691BBADA0B0091A768 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F111681BBADA0B0091A768 /* VideoToolbox.framework */; };
 		93F1116B1BBAF4DA0091A768 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F1116A1BBAF4DA0091A768 /* AVFoundation.framework */; };
 		93F1116D1BBAF4EB0091A768 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93F1116C1BBAF4EB0091A768 /* CoreVideo.framework */; };
@@ -33,6 +36,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		930705081BC539A100F452EA /* VideoGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoGLView.h; sourceTree = "<group>"; };
+		930705091BC539A100F452EA /* VideoGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoGLView.m; sourceTree = "<group>"; };
 		9345D2981BB56F300027EF97 /* Lightdroid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lightdroid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9345D29C1BB56F310027EF97 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9345D29E1BB56F310027EF97 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -151,6 +156,8 @@
 		9345D3B01BB974040027EF97 /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoderRenderer.h; sourceTree = "<group>"; };
 		9345D3B11BB974040027EF97 /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoderRenderer.m; sourceTree = "<group>"; };
 		9345D3B31BB975F20027EF97 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		93E7EA061BC696430074C872 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		93E7EA081BC696500074C872 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		93F111681BBADA0B0091A768 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		93F1116A1BBAF4DA0091A768 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		93F1116C1BBAF4EB0091A768 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -165,6 +172,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93E7EA091BC696500074C872 /* OpenGLES.framework in Frameworks */,
+				93E7EA071BC696430074C872 /* QuartzCore.framework in Frameworks */,
 				93F111701BBAF5270091A768 /* CoreGraphics.framework in Frameworks */,
 				93F1116D1BBAF4EB0091A768 /* CoreVideo.framework in Frameworks */,
 				93F1116B1BBAF4DA0091A768 /* AVFoundation.framework in Frameworks */,
@@ -190,6 +199,8 @@
 		148E7A629C1AE1D33D0310A7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				93E7EA081BC696500074C872 /* OpenGLES.framework */,
+				93E7EA061BC696430074C872 /* QuartzCore.framework */,
 				C8522409C4B6864B2E7D67C0 /* libPods.a */,
 			);
 			name = Frameworks;
@@ -229,6 +240,8 @@
 				9345D2AC1BB56F310027EF97 /* Info.plist */,
 				9345D3321BB570290027EF97 /* FFmpeg-iOS */,
 				9345D29B1BB56F310027EF97 /* Supporting Files */,
+				930705081BC539A100F452EA /* VideoGLView.h */,
+				930705091BC539A100F452EA /* VideoGLView.m */,
 			);
 			path = Lightdroid;
 			sourceTree = "<group>";
@@ -472,6 +485,7 @@
 				TargetAttributes = {
 					9345D2971BB56F300027EF97 = {
 						CreatedOnToolsVersion = 7.0;
+						DevelopmentTeam = TCNFFABBAW;
 					};
 				};
 			};
@@ -560,6 +574,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9345D2A31BB56F310027EF97 /* ViewController.m in Sources */,
+				9307050A1BC539A100F452EA /* VideoGLView.m in Sources */,
 				9345D3B21BB974040027EF97 /* VideoDecoderRenderer.m in Sources */,
 				9345D2A01BB56F310027EF97 /* AppDelegate.m in Sources */,
 				9345D29D1BB56F310027EF97 /* main.m in Sources */,
@@ -673,6 +688,8 @@
 			baseConfigurationReference = C724CD4386B84AB78F4F6B78 /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = Lightdroid/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -681,6 +698,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = berlin.justus.Lightdroid;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "Lightdroid/FFmpeg-iOS/include";
 			};
@@ -691,6 +709,8 @@
 			baseConfigurationReference = A3F3052C46086513C255AA03 /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = Lightdroid/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -699,6 +719,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = berlin.justus.Lightdroid;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "Lightdroid/FFmpeg-iOS/include";
 			};

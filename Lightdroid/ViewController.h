@@ -16,8 +16,6 @@
 #import "CocoaAsyncSocket/AsyncUdpSocket.h"
 
 @interface ViewController : UIViewController<AsyncUdpSocketDelegate> {
-    AVFormatContext *pFormatCtx;
-    AVCodecContext *pCodecCtx;
 
 }
 

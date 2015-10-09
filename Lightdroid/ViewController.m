@@ -9,6 +9,8 @@
 #import "ViewController.h"
 #import "VideoDecoderRenderer.h"
 
+#import "VideoGLView.h"
+
 #define	SDL_EVENT_MSGTYPE_NULL		0
 #define	SDL_EVENT_MSGTYPE_KEYBOARD	1
 #define	SDL_EVENT_MSGTYPE_MOUSEKEY	2
@@ -43,14 +45,19 @@ __attribute__((__packed__))
 typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
 
 @interface ViewController ()
-@property (weak, nonatomic) IBOutlet UIView *videoView;
 @property (strong, nonatomic) AsyncUdpSocket *socket;
 @property (atomic) BOOL stopPlaybackTrigger;
-@property (strong, atomic) VideoDecoderRenderer* renderer;
+// @property (strong, atomic) VideoDecoderRenderer* renderer;
+@property (strong, nonatomic) VideoGLView *videoGLView;
 @end
 
 @implementation ViewController {
     unsigned int msgCounter;
+  	struct SwsContext *img_convert_ctx;
+   	AVPicture picture;
+    AVFormatContext *pFormatCtx;
+    AVCodecContext *pCodecCtx;
+    AVFrame *pFrame;
 }
 
 - (void)viewDidLoad {
@@ -77,7 +84,7 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
 
 - (void)startPlayback {
     // Setup the H.264 hardware-renderer
-    self.renderer = [[VideoDecoderRenderer alloc] initWithView:self.view];
+    //self.renderer = [[VideoDecoderRenderer alloc] initWithView:self.view];
     
     // Connect to the RTSP live stream
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -91,11 +98,13 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
 - (void)stopPlayback {
     self.stopPlaybackTrigger = true;
     
-    self.renderer = nil;
+//    self.renderer = nil;
     self.socket = nil;
 }
 
 - (void)displayRtspStream {
+    AVCodec         *pCodec;
+    
     av_log_set_level(AV_LOG_DEBUG);
     av_register_all();
     avformat_network_init();
@@ -108,23 +117,24 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
     pFormatCtx = avformat_alloc_context();
     if (!pFormatCtx) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't create format context\n");
-        goto initError;
+        return;
     }
-    pFormatCtx->flags = /*AVFMT_FLAG_NOFILLIN |*/ /*) AVFMT_FLAG_NOPARSE | AVFMT_FLAG_DISCARD_CORRUPT |*/ AVFMT_FLAG_IGNIDX | AVFMT_FLAG_IGNDTS | AVFMT_FLAG_GENPTS | AVFMT_FLAG_NOBUFFER | AVFMT_FLAG_FLUSH_PACKETS;
-    pFormatCtx->error_recognition = 0;
+    // pFormatCtx->flags = /*AVFMT_FLAG_NOFILLIN |*/ /*) AVFMT_FLAG_NOPARSE | AVFMT_FLAG_DISCARD_CORRUPT |*/ AVFMT_FLAG_IGNIDX | AVFMT_FLAG_IGNDTS | AVFMT_FLAG_GENPTS | AVFMT_FLAG_NOBUFFER |AVFMT_FLAG_FLUSH_PACKETS;
+    // pFormatCtx->error_recognition = 0;
+    pFormatCtx->flags = AVFMT_FLAG_NOBUFFER;
     
     // Demo stream: rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov
     // rtsp://gl.justus.berlin:8554/desktop
     if (avformat_open_input(&pFormatCtx, [@"rtsp://gl.justus.berlin:8554/desktop" UTF8String], NULL, &opts) !=0 ) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't open file\n");
-        goto initError;
+        return;
     }
     
     // Retrieve stream information
-    /*if (avformat_find_stream_info(pFormatCtx,NULL) < 0) {
+    if (avformat_find_stream_info(pFormatCtx,NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't find stream information\n");
-        goto initError;
-    }*/
+        return;
+    }
     
     // Find the first video stream
     int videoStream=-1;
@@ -144,8 +154,27 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
     }
     
     if (videoStream==-1 /* && audioStream==-1*/) {
-        goto initError;
+        return;
     }
+    
+    // Get a pointer to the codec context for the video stream
+    pCodecCtx = pFormatCtx->streams[videoStream]->codec;
+    
+    // Find the decoder for the video stream
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if (pCodec == NULL) {
+        av_log(NULL, AV_LOG_ERROR, "Unsupported codec!\n");
+        return;
+    }
+    
+    // Open codec
+    if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Cannot open video decoder\n");
+        return;
+    }
+    
+    // Allocate video frame
+    pFrame = av_frame_alloc();
     
     AVPacket packet;
     self.stopPlaybackTrigger = false;
@@ -154,36 +183,107 @@ typedef struct sdlmsg_mouse_s		sdlmsg_mouse_t;
     
     av_read_play(pFormatCtx);
     
+    CGSize screenDimensions = [[UIScreen mainScreen] bounds].size;
     while (!self.stopPlaybackTrigger && av_read_frame(pFormatCtx, &packet) >=0 ) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
             // NSLog(@"Video data received.");
             
+            int frame_finished = 0;
+            avcodec_decode_video2(pCodecCtx, pFrame, &frame_finished, &packet);
+
             if(is_first_packet) {
                 // Copy and submit SPS and PPS data to the decoder first.
                 unsigned char *sps_pps_data = malloc(pFormatCtx->streams[videoStream]->codec->extradata_size);
                 unsigned int sps_pps_data_length = pFormatCtx->streams[videoStream]->codec->extradata_size;
-                memcpy(sps_pps_data, pFormatCtx->streams[videoStream]->codec->extradata, sps_pps_data_length);
-                [self.renderer submitDecodeBuffer:sps_pps_data length:sps_pps_data_length];
+//                memcpy(sps_pps_data, pFormatCtx->streams[videoStream]->codec->extradata, sps_pps_data_length);
+  //              [self.renderer submitDecodeBuffer:sps_pps_data length:sps_pps_data_length];
+                
+                // Allocate RGB picture
+                avpicture_alloc(&picture, PIX_FMT_RGB24, screenDimensions.width, screenDimensions.height);
+                
+                // Setup scaler
+                /*static int sws_flags =  SWS_FAST_BILINEAR;
+                img_convert_ctx = sws_getContext(pCodecCtx->width,
+                                                 pCodecCtx->height,
+                                                 pCodecCtx->pix_fmt,
+                                                 screenDimensions.width,
+                                                 screenDimensions.height,
+                                                 PIX_FMT_RGB24,
+                                                 sws_flags, NULL, NULL, NULL);*/
+                CGSize videoSize = CGSizeMake(pCodecCtx->width, pCodecCtx->height);
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    self.videoGLView = [[VideoGLView alloc] initWithFrame:self.view.frame andVideoSize:videoSize];
+                    assert(self.videoGLView != nil);
+                    [self.view addSubview:self.videoGLView];
+                });
+
                 
                 is_first_packet = false;
             }
             
-            unsigned char* duplicated_data = malloc(packet.size);
+/*            unsigned char* duplicated_data = malloc(packet.size);
             memcpy(duplicated_data, packet.data, packet.size);
-            [self.renderer submitDecodeBuffer:duplicated_data length:packet.size];
-        } else if (packet.stream_index != audioStream) {
+            [self.renderer submitDecodeBuffer:duplicated_data length:packet.size];*/
+            
+            if (frame_finished && pFrame && pFrame->data[0] && self.videoGLView) {
+                /*sws_scale(img_convert_ctx,
+                          pFrame->data,
+                          pFrame->linesize,
+                          0,
+                          pCodecCtx->height,
+                          picture.data,
+                          picture.linesize);
+                
+                CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
+                CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, picture.data[0], picture.linesize[0]*screenDimensions.height,kCFAllocatorNull);
+                CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
+                CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+                CGImageRef cgImage = CGImageCreate(screenDimensions.width,
+                                                   screenDimensions.height,
+                                                   8,
+                                                   24,
+                                                   picture.linesize[0],
+                                                   colorSpace,
+                                                   bitmapInfo,
+                                                   provider, 
+                                                   NULL, 
+                                                   NO, 
+                                                   kCGRenderingIntentDefault);
+                CGColorSpaceRelease(colorSpace);
+                
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    self.imageView.image = [UIImage imageWithCGImage:cgImage];
+                });
+                
+                CGImageRelease(cgImage);
+                CGDataProviderRelease(provider);
+                CFRelease(data);*/
+                
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [self.videoGLView displayFrame:pFrame];
+                });
+            }
+        } /*else if (packet.stream_index != audioStream) {
             // NSLog(@"Received packet in stream %d", packet.stream_index);
-        }
+        }*/
         
         av_free_packet(&packet);
     }
+    
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [self.videoGLView removeFromSuperview];
+        self.videoGLView = nil;
+    });
     
     av_read_pause(pFormatCtx);
     pFormatCtx->streams[videoStream]->discard = AVDISCARD_ALL;
     avformat_close_input(&pFormatCtx);
     avformat_free_context(pFormatCtx);
     pFormatCtx = nil;
+    
+  	avpicture_free(&picture);
+   	sws_freeContext(img_convert_ctx);
     
     NSLog(@"Playback stopped.");
     return;
@@ -199,7 +299,8 @@ initError:
     CGRect videoRect;
     
     // Get the video dimensions and compute aspect ratio
-    CGSize videoDimensions = [self.renderer videoDimensions];
+    CGSize videoDimensions = (pCodecCtx) ? CGSizeMake(pCodecCtx->width, pCodecCtx->height) : CGSizeMake(1, 1);
+
     if (videoDimensions.height == 0 || videoDimensions.width == 0) return videoRect; // ^= shit + fan... you know
     float videoAspectRatio = videoDimensions.width / videoDimensions.height;
     
@@ -282,13 +383,13 @@ initError:
 {
     CGPoint absolutePoint = [[[event allTouches] anyObject] locationInView:self.view];
     CGPoint relativePoint = [self convertToRelativePoint:absolutePoint];
-    CGSize videoDimension = [self.renderer videoDimensions];
-    NSLog(@"Touch down: %f x %f", absolutePoint.x, absolutePoint.y);
+    CGSize videoDimension = (pCodecCtx) ? CGSizeMake(pCodecCtx->width, pCodecCtx->height) : CGSizeMake(1, 1);
+    //NSLog(@"Touch down: %f x %f", absolutePoint.x, absolutePoint.y);
     
     unsigned short mousex = relativePoint.x * videoDimension.width;
     unsigned short mousey = relativePoint.y * videoDimension.height;
     
-    NSLog(@"Sending mouse %d x %d", mousex, mousey);
+    //NSLog(@"Sending mouse %d x %d", mousex, mousey);
     
     // Prepare message
     sdlmsg_mouse_t msg;
